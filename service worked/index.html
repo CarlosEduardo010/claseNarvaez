@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bitácora de eventos - Service Worker</title>
+  <style>
+    body{font-family:Inter,system-ui,Arial,Helvetica,sans-serif;background:#f7fafc;color:#0f172a;padding:24px}
+    header
+    {display:flex;align-items:center;gap:12px}
+    h1
+    {margin:0;font-size:20px}
+    .card
+    {background:white;border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(2,6,23,0.06);margin-top:16px}
+    table
+    {width:100%;border-collapse:collapse}
+    th,td
+    {padding:8px;border-bottom:1px solid #e6eef5;text-align:left;font-size:14px}
+    th
+    {background:#f1f9ff}
+    .badge
+    {display:inline-block;padding:4px 8px;border-radius:999px;font-weight:600}
+    .ocio
+    {background:#eef2ff;color:#a38830}
+    .activo
+    {background:#ffedd5;color:#7c2d12}
+    .activado
+    {background:#dcfce7;color:#3a6516}
+    .controls
+    {display:flex;gap:8px;margin-top:12px}
+    button
+    {padding:8px 12px;border-radius:8px;border:0;background:#a54a0e;color:white;cursor:pointer}
+    button.secondary{background:#818b64}
+    .small{font-size:12px;padding:6px 8px}
+    pre{background:#0b1220;color:#e6f0ff;padding:12px;border-radius:8px;overflow:auto}
+    .note{font-size:13px;color:#554133;margin-top:8px}
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Bitácora de eventos — Service Worker</h1>
+      <div class="note">Registra <strong>install</strong>, <strong>activate</strong> y <strong>fetch</strong>. Puedes simular eventos o instalar el Service Worker real.</div>
+    </div>
+  </header>
+
+  <div class="card">
+    <strong>Estado actual:</strong>
+    <span id="sw-state" class="badge ocio" style="margin-left:8px">Desconocido</span>
+
+    <div class="controls">
+      <button id="try-register">Registrar Service Worker (si tienes service-worker.js)</button>
+      <button id="download-sw" class="secondary small">Descargar service-worker.js</button>
+      <button id="clear-log" class="secondary small">Limpiar bitácora</button>
+    </div>
+
+    <div style="margin-top:12px">
+      <strong>Simular eventos (no requieren Service Worker real):</strong>
+      <div class="controls" style="margin-top:8px">
+        <button id="sim-install">Simular install → Ocioso</button>
+        <button id="sim-activate">Simular activate → Activado</button>
+        <button id="sim-fetch">Simular fetch → Activo</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h2 style="margin-top:0">Bitácora</h2>
+    <table id="log-table" aria-live="polite">
+      <thead>
+        <tr><th>Fecha</th><th>Hora</th><th>Evento</th><th>Estado</th><th>Descripción</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary style="cursor:pointer">Contenido de <code>service-worker.js</code> (puedes descargarlo y servirlo junto a este HTML para registrar un SW real)</summary>
+      <pre id="sw-code" readonly></pre>
+    </details>
+  </div>
+
+  <script>
+  // --- Funciones auxiliares ---
+  function nowParts() {
+    const d = new Date();
+    return { date: d.toLocaleDateString('es-ES'), time: d.toLocaleTimeString('es-ES') };
+  }
+
+  function addLog(event, estado, descripcion) {
+    const tbody = document.querySelector('#log-table tbody');
+    const p = nowParts();
+    const tr = document.createElement('tr');
+    const stateBadge = estado === 'Ocioso'
+      ? `<span class="badge ocio">Ocioso</span>`
+      : estado === 'Activo'
+      ? `<span class="badge activo">Activo</span>`
+      : `<span class="badge activado">Activado</span>`;
+    tr.innerHTML = `<td>${p.date}</td><td>${p.time}</td><td>${event}</td><td>${stateBadge}</td><td>${descripcion || ''}</td>`;
+    tbody.prepend(tr);
+    updateState(estado);
+  }
+
+  function updateState(estado) {
+    const el = document.getElementById('sw-state');
+    el.textContent = estado;
+    el.className = 'badge ' + (estado === 'Ocioso' ? 'ocio' : estado === 'Activo' ? 'activo' : 'activado');
+  }
+
+  // --- Registrar Service Worker con seguimiento detallado ---
+  document.getElementById('try-register').addEventListener('click', async () => {
+    if (!('serviceWorker' in navigator)) {
+      alert('Tu navegador no soporta Service Workers');
+      return;
+    }
+
+    try {
+      const reg = await navigator.serviceWorker.register('/service-worker.js');
+      addLog('register', 'Ocioso', 'Solicitud de registro enviada.');
+
+      // Escuchar cambios de estado en el SW
+      if (reg.installing) {
+        addLog('installing', 'Ocioso', 'Service Worker instalándose...');
+        reg.installing.addEventListener('statechange', () => trackSWState(reg.installing));
+      } else if (reg.waiting) {
+        addLog('waiting', 'Ocioso', 'Service Worker esperando activación...');
+      } else if (reg.active) {
+        addLog('active', 'Activado', 'Service Worker activo.');
+      }
+    } catch (err) {
+      console.error(err);
+      addLog('register_failed', 'Ocioso', 'No se pudo registrar el SW.');
+      alert('Error al registrar el SW. Verifica que service-worker.js exista y sirvas desde un servidor.');
+    }
+  });
+
+  function trackSWState(sw) {
+    sw.addEventListener('statechange', () => {
+      switch (sw.state) {
+        case 'installing':
+          addLog('installing', 'Ocioso', 'El Service Worker se está instalando...');
+          break;
+        case 'installed':
+          addLog('installed', 'Ocioso', 'El Service Worker fue instalado.');
+          break;
+        case 'activating':
+          addLog('activating', 'Activo', 'El Service Worker se está activando...');
+          break;
+        case 'activated':
+          addLog('activated', 'Activado', 'El Service Worker está activado.');
+          break;
+        case 'redundant':
+          addLog('redundant', 'Ocioso', 'El Service Worker ha sido reemplazado.');
+          break;
+      }
+    });
+  }
+
+  // --- Escuchar mensajes del SW ---
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', ev => {
+      const data = ev.data || {};
+      const evt = data.event || 'message';
+      const msg = data.message || JSON.stringify(data);
+      const url = data.url ? ` (url: ${data.url})` : '';
+      const estado = evt.includes('fetch') ? 'Activo' : evt.includes('activate') ? 'Activado' : 'Ocioso';
+      addLog(evt, estado, msg + url);
+    });
+
+    navigator.serviceWorker.oncontrollerchange = () => {
+      addLog('controllerchange', 'Activado', 'El Service Worker ahora controla la página.');
+    };
+  }
+
+  // --- Inicializar la bitácora ---
+  addLog('inicio', 'Ocioso', 'Página cargada. Puedes simular eventos o registrar el SW.');
+</script>
+
+</body>
+</html>
