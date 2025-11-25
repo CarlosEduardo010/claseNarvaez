@@ -4,10 +4,49 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <style>
+        .offline-border {
+            position: fixed;
+            inset: 0; 
+            pointer-events: none; 
+            box-sizing: border-box;
+            border: 6px solid rgba(239, 169, 169, 0.95); 
+            z-index: 9999;
+        }
+
+        .offline {
+            position: fixed;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            background: rgba(220,20,20,0.95);
+            color: white;
+            font-weight: 700;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            z-index: 10000;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+            display: none; /* oculto por defecto */
+            pointer-events: auto; /* usuario puede seleccionarlo si lo desea */
+            text-align: center;
+            letter-spacing: 0.6px;
+        }
+
+        /* Cuando esté visible */
+        .offline-visible { display: block; }
+    </style>
 </head>
 <body>
 
     <img src="img/2.jpeg" style="width: 10rem;" >
+
+
+    <!-- Indicador visual para modo offline -->
+    <div id="offline-border" aria-hidden="true" class="" ></div>
+    <div id="offline-badge" class="offline" role="status" aria-live="polite">OFFLINE</div>
+
+
     <script src="main.js" ></script>
 </body>
 </html>

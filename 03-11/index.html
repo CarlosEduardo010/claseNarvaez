@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>puchDB</title>
+</head>
+<body>
+    <fieldset>
+        <legend>Post</legend>
+    <p> 
+        <div>
+        <label for="post-title">title </label>
+        <textarea name="title" id="title"></textarea>
+        </div>
+        <label for="post-title">Body: </label>
+        <textarea name="body" id="body"></textarea>
+    </p>
+    <p>
+        <button id="save-post">save post</button>
+    </p>
+    </fieldset>
+    <script src="https://cdn.jsdelivr.net/npm/pouchdb@9.0.0/dist/pouchdb.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

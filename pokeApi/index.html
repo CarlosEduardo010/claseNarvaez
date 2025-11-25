@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network First, Cache Fallback (PokeAPI)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100 p-4">
+
+    <div class="container mx-auto">
+        <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">Pokémon Explorer (Network First)</h1>
+        
+        <div id="pokemon-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <p id="loading-message" class="col-span-full text-center text-gray-500">Cargando Pokémon...</p>
+        </div>
+
+        <div class="flex justify-center space-x-4">
+            <button id="prev-page-btn" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50" disabled>
+                Página Anterior
+            </button>
+            <button id="next-page-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50" disabled>
+                Siguiente Página
+            </button>
+        </div>
+    </div>
+
+    <script src="register.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
